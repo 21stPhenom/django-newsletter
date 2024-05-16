@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.settings import DEFAULT_FROM_EMAIL
+from newsletter_api.tasks import send_email_task
 
 class SendMail(APIView):
     def post(self, request, *args, **kwargs):
@@ -28,21 +29,16 @@ class SendMail(APIView):
                 'error': 'invalid email received'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-            
+        # replace `None` with an empty string
         if message is None:
             message = ''
-        
+            
         try:
-            send_mail(
-                'Test Mail',
-                f'This is the message you typed: {message}',
-                from_email=DEFAULT_FROM_EMAIL,
-                recipient_list=[email_address]
-            )
+            send_email_task.delay(email_address, message)
             return Response({
                 'message': 'email sent successfully'
             }, status=status.HTTP_200_OK)
-        
+
         except Exception as e:
             print(e)
             return Response({
