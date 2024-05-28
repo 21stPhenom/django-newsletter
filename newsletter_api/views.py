@@ -14,6 +14,11 @@ class SendMail(APIView):
         email_address = request.data.get('email_address', None)
         message = request.data.get('message', None)
         
+        if type(email_address) != str:
+            return Response({
+                'error': 'email address must be a string'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         # handle empty email address parameter
         if email_address is None:
             return Response({
